@@ -1,4 +1,4 @@
-import React , {useState} from 'react'
+import React , {useState , useEffect} from 'react'
 import {Form ,Input ,message} from 'antd'
 import { Link , useNavigate} from 'react-router-dom'
 import axios from 'axios'
@@ -24,7 +24,12 @@ const submitHandler =async(values)=>{
         
     }
 }
-
+//pevent for login user 
+  useEffect(()=>{
+    if(localStorage.getItem('user')){
+        navigate("/")
+    }
+  },[navigate])
   return (
     <div className='register_page'>
         {loading && <Spinner/>}
