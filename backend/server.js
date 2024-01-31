@@ -18,9 +18,7 @@ app.use(express.json());
 
 const PORT =process.env.PORT || 8080;
 //routes
-app.get('/',(req,res)=>{
-    res.send("Welcome to the API")
-})
+app.use('/api/v1/users',require('./routes/userRoute'));
 
 app.listen(PORT ,()=>{
     console.log(`server running on ${PORT}`);
