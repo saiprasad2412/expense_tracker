@@ -1,7 +1,14 @@
-import React from "react";
+import React,{useState ,useEffect} from "react";
 import { Link } from "react-router-dom";
 
 const Header = () => {
+  const [loginUser , setLoginUser]=useState('');
+  useEffect(()=>{
+    const user= JSON.parse(localStorage.getItem('user'))
+    if(user){
+      setLoginUser(user)
+    }
+  },[])
   return (
     <>
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
@@ -19,8 +26,13 @@ const Header = () => {
 
               </li>
               <li className="nav-item">
-                <Link  to="/user" className="nav-link">
-                  User
+                
+                  {loginUser && loginUser.name}
+            
+              </li>
+              <li className="nav-item">
+                <Link  to="/user" className="nav-link active">
+                  Logout
                   </Link>
             
               </li>
