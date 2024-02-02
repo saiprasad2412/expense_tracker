@@ -1,12 +1,199 @@
-import React from 'react'
+import React ,{useState , useEffect} from 'react'
+import {Form, Input, Modal, Select, Table, message , DatePicker}from 'antd'
 import Layout from '../components/layout/Layout'
+import axios from 'axios'
+import Spinner from '../components/Spinner';
+import moment from 'moment'
+
+const{RangePicker}=DatePicker;
 
 const HomePage = () => {
+  const [showModal ,setShowModal]=useState(false);
+  const [loading , setLoading]=useState(false);
+  const [allTransactions ,setAllTransactions]=useState([]);
+  const [frequency , setFrequency]=useState('7');
+  const [selectedDate , setSelectedDate]=useState([]);
+  const [type , setType]=useState('all');
+
+ 
+  //table data
+  const columns = [
+    {
+      title:"Date",
+      dateIndex:'date',
+      key:'date'
+    },
+    {
+      title:"Amount",
+      dateIndex:'amount',
+      key:'amount',
+
+    },
+    {
+      title:"Type",
+      dateIndex:'type',
+      key:'type',
+
+    },
+    {
+      title:"Category",
+      dateIndex:'category',
+      key:'category',
+
+    },
+    {
+      title:"Reference",
+      dateIndex:'refrence',
+      key:'refrence',
+
+    },
+    {
+      title:"Description",
+      dateIndex:'description',
+      key:'description',
+
+    },
+    {
+      title:"Actions",
+      key:'actions'
+    }
+  ]
+
+  //useeffect hok for getting trnsactions info
+  useEffect(()=>{
+     //get all transactions
+  const getAllTransactions = async()=>{
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      setLoading(true);
+      const res = await axios.post('transactions/get-transactions',{userid:user._id, frequency , selectedDate ,type});
+      setLoading(false);
+      setAllTransactions(res.data);
+      console.log(res.data);
+    } catch (error) {
+      console.log(error);
+      message.error("Error while getting your trsactions Info !")
+    }
+  }
+    getAllTransactions();
+  },[frequency , selectedDate , type])
+
+  //form handling
+  const handleSubmit =async(values)=>{
+    try {
+      const user =JSON.parse(localStorage.getItem('user'));
+      setLoading(true);
+      await axios.post('/transactions/add-transaction',{...values,userid:user._id});
+      setLoading(false)
+      message.success('Transaction Added Successfully !!');
+      setShowModal(false)
+    } catch (error) {
+      setLoading(false);
+      message.error("Failed to add transaction");
+      
+    }
+  }
   return (
     <Layout>
-        homePage
+      {loading && <Spinner/>}
+        <div className="filters">
+          <div >
+            <h6>Select Frequency</h6>
+            <Select value={frequency} onChange={(values)=>{setFrequency(values)}}>
+              <Select.Option value='7'>Last 1 week</Select.Option>
+              <Select.Option value='30'>Last 1 Month</Select.Option>
+              <Select.Option value='365'>Last 1 year</Select.Option>
+              <Select.Option value='custom'>Custom</Select.Option>
+
+            </Select>
+            {frequency==='custom' && <RangePicker value={selectedDate} onChange={(values)=>{
+              setSelectedDate(values)
+            }}/>}
+          </div>
+          <div >
+            <h6>Select Type</h6>
+            <Select value={type} onChange={(values)=>{setType(values)}}>
+              <Select.Option value='all'>All</Select.Option>
+              <Select.Option value='income'>Income</Select.Option>
+              <Select.Option value='expense'>Expense</Select.Option>
+            </Select>
+          
+          </div>
+          <div>
+            <button className='btn btn-primary ' onClick={()=>setShowModal(true)}>Add New</button>
+          </div>
+        </div>
+        <div className="content">
+          {/* <Table columns={columns} dataSource={allTransactions}  rowKey={allTransactions.createdAt}/> */}
+          <table className="table table-striped table-hover">
+     <thead>
+       <tr>
+         <th scope="col">Date</th>
+         <th scope="col">Amount</th>
+         <th scope="col">Type</th>
+         <th scope="col">Category</th>
+         <th scope="col">Reference</th>
+         <th scope="col">Description</th>
+         <th scope="col">Action</th>
+       </tr>
+     </thead>
+     <tbody>
+       {allTransactions.map((transaction) => (
+         <tr key={transaction._id}>
+           <td>{moment(transaction.date).format('YYYY-MM-DD')}</td>
+           <td>{transaction.amount}</td>
+           <td>{transaction.type}</td>
+           <td>{transaction.category}</td>
+           <td>{transaction.refrence}</td>
+           <td>{transaction.description}</td>
+           <td>
+             
+             <button className=" mx-2 btn btn-sm btn-primary">View</button>
+             <button className="mx-2 btn btn-sm btn-warning">Edit</button>
+             <button className=" btn btn-sm btn-danger">Delete</button>
+           </td>
+         </tr>
+       ))}
+     </tbody>
+   </table>
+        </div>
+        <Modal title="Add Transaction" open={showModal} onCancel={()=>setShowModal(false)} footer={false}>
+            <Form layout='vertical' onFinish={handleSubmit}>
+              <Form.Item label='Amount' name="amount">
+                <Input type='Number' placeholder='Enter Your Amount Here:'/>
+
+              </Form.Item>
+              <Form.Item label='type' name="type">
+                <Select>
+                  <Select.Option value='income'>Income</Select.Option>
+                  <Select.Option value='expense'>Expense</Select.Option>
+
+                </Select>
+
+              </Form.Item>
+              <Form.Item label='Category' name="category">
+              <Input type='string' placeholder='Enter Caterory  Here:'/>
+              </Form.Item>
+              <Form.Item label='Date' name="date">
+              <Input type='date' placeholder='Enter Date of income/expense  Here:'/>
+              </Form.Item>
+              <Form.Item label='Rafrence' name="refrence">
+              <Input type='string' placeholder='Enter reference of income/expense  Here:'/>
+              </Form.Item>
+              <Form.Item label='Description' name="description">
+              <Input type='string' placeholder='Enter Description of income/expense  Here:'/>
+              </Form.Item>
+
+              <div className="d-flex justify-content-end">
+                <button type='submit' className='btn btn-primary'>SAVE </button>
+              </div>
+
+            </Form>
+        </Modal>
     </Layout>
   )
 }
+
+
 
 export default HomePage

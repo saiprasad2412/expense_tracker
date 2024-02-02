@@ -16,10 +16,13 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
-const PORT =process.env.PORT || 8080;
 //routes
+//user routes
 app.use('/api/v1/users',require('./routes/userRoute'));
+//transaction routes
+app.use('/api/v1/transactions',require('./routes/transactionRoute'))
 
+const PORT =process.env.PORT || 8080;
 app.listen(PORT ,()=>{
     console.log(`server running on ${PORT}`);
 })
