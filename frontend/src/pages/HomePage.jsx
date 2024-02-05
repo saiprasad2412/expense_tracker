@@ -1,5 +1,6 @@
 import React ,{useState , useEffect} from 'react'
 import {Form, Input, Modal, Select, Table, message , DatePicker}from 'antd'
+import {UnorderedListOutlined, AreaChartOutlined} from '@ant-design/icons'
 import Layout from '../components/layout/Layout'
 import axios from 'axios'
 import Spinner from '../components/Spinner';
@@ -14,6 +15,7 @@ const HomePage = () => {
   const [frequency , setFrequency]=useState('7');
   const [selectedDate , setSelectedDate]=useState([]);
   const [type , setType]=useState('all');
+  const[viewData , setViewData]=useState('table');
 
  
   //table data
@@ -119,7 +121,12 @@ const HomePage = () => {
             </Select>
           
           </div>
+          <div className='switch_icons'>
+              <UnorderedListOutlined className={`mx-2 ${viewData==='table' ? 'active_icon':'inactive_icon'}`} onClick={()=>setViewData('table')}/>
+              <AreaChartOutlined className={`mx-2 ${viewData==='analytics' ? 'active_icon':'inactive_icon'}`}  onClick={()=>setViewData('analytics')}/>
+            </div>
           <div>
+           
             <button className='btn btn-primary ' onClick={()=>setShowModal(true)}>Add New</button>
           </div>
         </div>
