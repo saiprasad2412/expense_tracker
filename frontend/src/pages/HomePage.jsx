@@ -5,6 +5,7 @@ import Layout from '../components/layout/Layout'
 import axios from 'axios'
 import Spinner from '../components/Spinner';
 import moment from 'moment'
+import Analytics from '../components/Analytics'
 
 const{RangePicker}=DatePicker;
 
@@ -16,6 +17,7 @@ const HomePage = () => {
   const [selectedDate , setSelectedDate]=useState([]);
   const [type , setType]=useState('all');
   const[viewData , setViewData]=useState('table');
+  const[editable , setEditable]=useState(null);
 
  
   //table data
@@ -80,15 +82,47 @@ const HomePage = () => {
     getAllTransactions();
   },[frequency , selectedDate , type])
 
+
+// delete handler 
+  const handleDelete=async (record)=>{
+    try {
+      setLoading(true)
+      await  axios.post('transactions/delete-transaction',{transactionId:record._id});
+      setLoading(false);
+      message.success("Delete Successfully !!")
+
+    } catch (error) {
+      setLoading(false);
+      message.error('Unable to Delete !!')
+      console.log(error);
+    }
+  }
+
+
   //form handling
   const handleSubmit =async(values)=>{
     try {
       const user =JSON.parse(localStorage.getItem('user'));
       setLoading(true);
-      await axios.post('/transactions/add-transaction',{...values,userid:user._id});
-      setLoading(false)
-      message.success('Transaction Added Successfully !!');
+      if(editable){
+        await axios.post('/transactions/edit-transaction',{
+          payload:{
+            ...values,
+            userId:user._id 
+          },
+          transactionId:editable._id
+        });
+        setLoading(false)
+        message.success('Transaction Updated Successfully !!');
+
+      }
+      else{
+        await axios.post('/transactions/add-transaction',{...values,userid:user._id});
+        setLoading(false)
+        message.success('Transaction Added Successfully !!');
+      }
       setShowModal(false)
+      setEditable(null)
     } catch (error) {
       setLoading(false);
       message.error("Failed to add transaction");
@@ -131,8 +165,7 @@ const HomePage = () => {
           </div>
         </div>
         <div className="content">
-          {/* <Table columns={columns} dataSource={allTransactions}  rowKey={allTransactions.createdAt}/> */}
-          <table className="table table-striped table-hover">
+          {viewData==='table' ?  <table className="table table-striped table-hover">
      <thead>
        <tr>
          <th scope="col">Date</th>
@@ -155,17 +188,26 @@ const HomePage = () => {
            <td>{transaction.description}</td>
            <td>
              
-             <button className=" mx-2 btn btn-sm btn-primary">View</button>
-             <button className="mx-2 btn btn-sm btn-warning">Edit</button>
-             <button className=" btn btn-sm btn-danger">Delete</button>
+             <button className="mx-2 btn btn-sm btn-warning" onClick={()=>{
+              const record = transaction
+              setShowModal(true)
+              setEditable(record)
+              console.log('edit :', record);
+              }}>Edit</button>
+             <button className=" btn btn-sm btn-danger" onClick={()=>{
+              const record = transaction
+              handleDelete(record)}}>Delete</button>
            </td>
          </tr>
        ))}
      </tbody>
    </table>
+    : <Analytics allTransactions={allTransactions}/>}
+          {/* <Table columns={columns} dataSource={allTransactions}  rowKey={allTransactions.createdAt}/> */}
+         
         </div>
-        <Modal title="Add Transaction" open={showModal} onCancel={()=>setShowModal(false)} footer={false}>
-            <Form layout='vertical' onFinish={handleSubmit}>
+        <Modal title={editable?"Edit Transaction":"Add Transaction"} open={showModal} onCancel={()=>setShowModal(false)} footer={false}>
+            <Form layout='vertical' onFinish={handleSubmit} initialValues={editable}>
               <Form.Item label='Amount' name="amount">
                 <Input type='Number' placeholder='Enter Your Amount Here:'/>
 
@@ -179,7 +221,7 @@ const HomePage = () => {
 
               </Form.Item>
               <Form.Item label='Category' name="category">
-              <Input type='string' placeholder='Enter Caterory  Here:'/>
+              <Input type='string' placeholder='(salary /rent /bike/ petroleum/ food/ recharge/ order/ hospital/ other)'/>
               </Form.Item>
               <Form.Item label='Date' name="date">
               <Input type='date' placeholder='Enter Date of income/expense  Here:'/>
